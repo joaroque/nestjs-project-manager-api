@@ -1,73 +1,144 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, Project, Task, User } from "@prisma/client";
-import { PrismaService } from "src/prisma/prisma.service";
-import * as bcrypt from "bcrypt";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma, Project, Task, User } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
+import { ProjectService } from 'src/projects/project.service';
 
 @Injectable()
 export class TaskService {
-    constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly projectService: ProjectService,
+  ) {}
 
-    async encryptPassword(password: any) {
-        const salt = await bcrypt.genSalt();
-        const encryptedPassword = await bcrypt.hash(password, salt)
+  async create(
+    data: Prisma.TaskCreateInput,
+    projectId: number,
+    userId: number,
+  ): Promise<Task> {
+    const project = await this.projectService.exists(projectId, userId);
 
-        return encryptedPassword;
+    return this.prisma.task.create({
+      data: {
+        title: data.title,
+        completed: Boolean(data.completed),
+        projectId: project.id,
+      },
+    });
+  }
+
+  async findAll(userId) {
+    const projects = await this.prisma.project.findMany({
+      where: {
+        userId: userId,
+      },
+    });
+
+    if (projects.length === 0) {
+      return [];
     }
 
-    async create(data: Prisma.TaskCreateInput): Promise<Task> {
-        const id = 1;
-        return this.prisma.task.create({
-            data: {
-                title: data.title,
-                completed: Boolean(data.completed),
-                projectId: id
-            }
-        })
+    const projectIds = projects.map((project) => project.id);
+
+    return this.prisma.task.findMany({
+      where: {
+        projectId: {
+          in: projectIds,
+        },
+      },
+    });
+  }
+
+  async findOne(id: number, userId: number): Promise<Task> | null {
+    const task = await this.prisma.task.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        project: true,
+      },
+    });
+    if (!task) {
+      throw new NotFoundException('Task not found');
     }
 
-    async findAll(): Promise<Task[]> {
-        return this.prisma.task.findMany()
+    if (task.project.userId !== userId) {
+      throw new NotFoundException('Taks not found');
     }
 
-    async findOne(id: number): Promise<Task> | null {
-        return this.prisma.task.findUnique({
-            where: {
-                id,
-            }
-        })
+    return task;
+  }
+
+  async update(
+    id: number,
+    data: Prisma.TaskUpdateInput,
+    userId: number,
+  ): Promise<Task> {
+    const task = await this.prisma.task.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        project: true,
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Taks not found');
     }
 
-    async update(id: number, data: Prisma.TaskUpdateInput): Promise<Task> {
-        const project = await this.exists(id);
-        const projectId = 1
-        data.completed = Boolean(data.completed);
-
-        return this.prisma.task.update({
-            where: {
-                id,
-            },
-            data
-        })
+    if (task.project.userId !== userId) {
+      throw new NotFoundException('Taks not found');
     }
 
-    async remove(id: number): Promise<Task> | never {
-        await this.exists(id)
+    data.completed = Boolean(data.completed);
+    return this.prisma.task.update({
+      where: {
+        id,
+      },
+      data,
+    });
+  }
 
-        return this.prisma.task.delete({
-            where: {
-                id,
-            }
-        })
+  async remove(id: number, userId: number): Promise<Task> | never {
+    const task = await this.prisma.task.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        project: true,
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Taks not found');
     }
 
-    async exists(id: number) {
-        const user = await this.prisma.task.count({
-            where: {
-                id,
-            }
-        })
-        if (!user) {
-            throw new NotFoundException(`User ${id} not found`);
-        }
+    if (task.project.userId !== userId) {
+      throw new NotFoundException('Taks not found');
     }
+
+    return this.prisma.task.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
+  async exists(id: number) {
+    const task = await this.prisma.task.count({
+      where: {
+        id,
+      },
+    });
+    if (!task) {
+      throw new NotFoundException(`User ${id} not found`);
+    }
+
+    return task;
+  }
 }

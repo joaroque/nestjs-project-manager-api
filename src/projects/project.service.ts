@@ -1,74 +1,85 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, Project, User } from "@prisma/client";
-import { PrismaService } from "src/prisma/prisma.service";
-import * as bcrypt from "bcrypt";
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma, Project, User } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ProjectService {
-    constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-    async encryptPassword(password: any) {
-        const salt = await bcrypt.genSalt();
-        const encryptedPassword = await bcrypt.hash(password, salt)
+  async create(data: Prisma.ProjectCreateInput, userId): Promise<Project> {
+    return this.prisma.project.create({
+      data: {
+        name: data.name,
+        user: {
+          connect: { id: userId },
+        },
+      },
+    });
+  }
 
-        return encryptedPassword;
+  async findAll(userId: number): Promise<Project[]> {
+    return this.prisma.project.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        tasks: true,
+      },
+    });
+  }
+
+  async findOne(id: number, userId: number): Promise<Project> | null {
+    return this.prisma.project.findUnique({
+      where: {
+        id,
+        userId,
+      },
+      include: {
+        tasks: true,
+      },
+    });
+  }
+
+  async update(
+    id: number,
+    data: Prisma.ProjectUpdateInput,
+    userId: number,
+  ): Promise<Project> {
+    const project = await this.exists(id, userId);
+
+    return this.prisma.project.update({
+      where: {
+        id,
+      },
+      data: {
+        name: data.name,
+      },
+    });
+  }
+
+  async remove(id: number, userId: number): Promise<Project> | never {
+    await this.exists(id, userId);
+
+    return this.prisma.project.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
+  async exists(id: number, userId: number) {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id,
+        userId,
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException(`ProjectId ${id} not found`);
     }
 
-    async create(data: Prisma.ProjectCreateInput): Promise<Project> {
-        const reqId = 2
-        return this.prisma.project.create({
-            data: {
-                name: data.name,
-                user: {
-                    connect: { id: reqId }
-                }
-            }
-        });
-    }
-
-    async findAll(): Promise<Project[]> {
-        return this.prisma.project.findMany()
-    }
-
-    async findOne(id: number): Promise<Project> | null {
-        return this.prisma.project.findUnique({
-            where: {
-                id
-            }
-        })
-    }
-
-    async update(id: number, data: Prisma.ProjectUpdateInput): Promise<Project> {
-        const project = await this.exists(id);
-
-        return this.prisma.project.update({
-            where: {
-                id
-            },
-            data: {
-                name: data.name
-            }
-        })
-    }
-
-    async remove(id: number): Promise<Project> | never {
-        await this.exists(id)
-
-        return this.prisma.project.delete({
-            where: {
-                id
-            }
-        })
-    }
-
-    async exists(id: number) {
-        const user = await this.prisma.project.count({
-            where: {
-                id
-            }
-        })
-        if (!user) {
-            throw new NotFoundException(`User ${id} not found`);
-        }
-    }
+    return project;
+  }
 }
