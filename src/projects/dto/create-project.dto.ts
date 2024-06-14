@@ -1,12 +1,15 @@
 import { Prisma, User } from "@prisma/client";
-import { IsEmail, IsNotEmpty, IsNumber, IsString, IsStrongPassword } from "class-validator";
+import { IsEmail, IsNotEmpty, IsNumber, IsNumberString, IsOptional, IsString, IsStrongPassword } from "class-validator";
 
 export class CreateProjectDto {
     @IsNotEmpty()
     @IsString()
     name: string;
 
+    @IsNumberString()
     userId: number;
 
-    user: Prisma.UserCreateNestedOneWithoutProjectsInput
+    @IsOptional()
+    user: Prisma.UserCreateNestedOneWithoutProjectsInput;
+
 }

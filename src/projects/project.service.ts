@@ -15,11 +15,12 @@ export class ProjectService {
     }
 
     async create(data: Prisma.ProjectCreateInput): Promise<Project> {
+        const reqId = 2
         return this.prisma.project.create({
             data: {
                 name: data.name,
                 user: {
-                    connect: { id: 2}
+                    connect: { id: reqId }
                 }
             }
         });
@@ -38,13 +39,15 @@ export class ProjectService {
     }
 
     async update(id: number, data: Prisma.ProjectUpdateInput): Promise<Project> {
-        await this.exists(id)
+        const project = await this.exists(id);
 
         return this.prisma.project.update({
             where: {
                 id
             },
-            data
+            data: {
+                name: data.name
+            }
         })
     }
 

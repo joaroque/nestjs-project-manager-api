@@ -1,20 +1,20 @@
-import { 
-    Body, 
-    Controller, 
-    Delete, 
-    Get, 
-    Param, 
-    ParseIntPipe, 
-    Patch, 
-    Post 
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post
 } from "@nestjs/common";
 import { ProjectService } from "./project.service";
 import { CreateProjectDto } from "./dto/create-project.dto";
-import { UpdateUserDto } from "./dto/update-project.dto";
-import { Prisma } from "@prisma/client";
+import { UpdateProjectDto } from "./dto/update-project.dto";
 
 @Controller('projects')
 export class ProjectController {
+
     constructor(private readonly projectService: ProjectService) { }
 
     @Get(':id')
@@ -28,12 +28,12 @@ export class ProjectController {
     }
 
     @Post()
-    async create(@Body() data: Prisma.ProjectCreateInput) {
+    async create(@Body() data: CreateProjectDto) {
         return this.projectService.create(data);
     }
 
     @Patch(':id')
-    async update(@Param('id', ParseIntPipe) id, @Body() data: Prisma.ProjectUpdateInput) {
+    async update(@Param('id', ParseIntPipe) id, @Body() data: UpdateProjectDto) {
         return this.projectService.update(id, data);
     }
 
