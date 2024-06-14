@@ -6,12 +6,19 @@ import {
     Param, 
     ParseIntPipe, 
     Patch, 
-    Post 
+    Post, 
+    UseGuards
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { Roles } from "src/decorators/roles.decarator";
+import { Role } from "src/enum/role.enum";
+import { AuthGuard } from "src/guards/auth.guard";
+import { RoleGuard } from "src/guards/role.guard";
 
+@Roles(Role.Admin)
+@UseGuards(AuthGuard, RoleGuard)
 @Controller('users')
 export class UserController {
     constructor(private readonly userService: UserService) { }

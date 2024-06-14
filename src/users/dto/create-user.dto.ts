@@ -1,4 +1,14 @@
-import { IsEmail, IsNotEmpty, IsString, IsStrongPassword, MaxLength } from "class-validator";
+import { Type } from "class-transformer";
+import { 
+    IsEmail, 
+    IsEnum, 
+    IsNotEmpty, 
+    IsOptional, 
+    IsString, 
+    IsStrongPassword, 
+    MaxLength 
+} from "class-validator";
+import { Role } from "src/enum/role.enum";
 
 export class CreateUserDto {
     @IsNotEmpty()
@@ -18,4 +28,9 @@ export class CreateUserDto {
         "minUppercase": 2,
     })
     password: string
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsEnum(Role)
+    role: number;
 }

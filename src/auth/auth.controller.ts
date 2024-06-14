@@ -10,8 +10,8 @@ import { AuthService } from "./auth.service";
 import { AuthLoginDto } from "./dto/auth-login.dto";
 import { AuthResetDto } from "./dto/auth-reset.dto";
 import { AuthForgetDto } from "./dto/auth-forget.dto";
-// import { AuthGuard } from "src/guards/auth.guard";
-import { User } from "src/auth/decorators/user.decorator";
+import { AuthGuard } from "src/guards/auth.guard";
+import { User } from "src/decorators/user.decorator";
 import { AuthRegisterDto } from "./dto/auth-register.dto";
 
 @Controller('auth')
@@ -42,7 +42,7 @@ export class AuthController {
 
     }
 
-    // @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard)
     @Post('me')
     async me(@User() user) {
         return { user };

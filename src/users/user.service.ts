@@ -16,7 +16,8 @@ export class UserService {
 
     async create(data: Prisma.UserCreateInput): Promise<User> {
         data.password = await this.encryptPassword(data.password);
-
+        data.role = Number(data.role);
+        
         return this.prisma.user.create({
             data
         })

@@ -110,7 +110,7 @@ export class AuthService {
 
         const token = this.createToken(user, this.forgetTokenOptions)
 
-        return { msg: `Your reset password token : ${token}` }
+        return { msg: `Your reset password token : ${token.accessToken}` }
     }
 
     async reset(token: string, password: string) {
