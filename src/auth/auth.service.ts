@@ -65,8 +65,6 @@ export class AuthService {
       where: { email },
     });
 
-    console.log(user);
-
     if (!user) {
       throw new UnauthorizedException('E-mail or password are incorrect.');
     }

@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Project, User } from '@prisma/client';
+import { Prisma, Project } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ProjectService {
@@ -64,6 +63,9 @@ export class ProjectService {
     return this.prisma.project.delete({
       where: {
         id,
+      },
+      include: {
+        tasks: true,
       },
     });
   }

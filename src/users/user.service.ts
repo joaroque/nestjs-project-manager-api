@@ -24,13 +24,28 @@ export class UserService {
   }
 
   async findAll(): Promise<User[]> {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      include: {
+        projects: {
+          include: {
+            tasks: true,
+          },
+        },
+      },
+    });
   }
 
   async findOne(id: number): Promise<User> | null {
     return this.prisma.user.findUnique({
       where: {
         id,
+      },
+      include: {
+        projects: {
+          include: {
+            tasks: true,
+          },
+        },
       },
     });
   }
