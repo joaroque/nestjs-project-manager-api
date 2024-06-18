@@ -49,21 +49,7 @@ export class TaskService {
   }
 
   async findOne(id: number, userId: number): Promise<Task> | null {
-    const task = await this.prisma.task.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        project: true,
-      },
-    });
-    if (!task) {
-      throw new NotFoundException('Task not found');
-    }
-
-    if (task.project.userId !== userId) {
-      throw new NotFoundException('Taks not found');
-    }
+    const task = this.existsTaskAndProject(id, userId);
 
     return task;
   }
@@ -73,22 +59,7 @@ export class TaskService {
     data: Prisma.TaskUpdateInput,
     userId: number,
   ): Promise<Task> {
-    const task = await this.prisma.task.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        project: true,
-      },
-    });
-
-    if (!task) {
-      throw new NotFoundException('Taks not found');
-    }
-
-    if (task.project.userId !== userId) {
-      throw new NotFoundException('Taks not found');
-    }
+    this.existsTaskAndProject(id, userId);
 
     data.completed = Boolean(data.completed);
     return this.prisma.task.update({
@@ -100,6 +71,16 @@ export class TaskService {
   }
 
   async remove(id: number, userId: number): Promise<Task> | never {
+    this.existsTaskAndProject(id, userId);
+
+    return this.prisma.task.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
+  async existsTaskAndProject(id: number, userId: number) {
     const task = await this.prisma.task.findUnique({
       where: {
         id,
@@ -115,23 +96,6 @@ export class TaskService {
 
     if (task.project.userId !== userId) {
       throw new NotFoundException('Taks not found');
-    }
-
-    return this.prisma.task.delete({
-      where: {
-        id,
-      },
-    });
-  }
-
-  async exists(id: number) {
-    const task = await this.prisma.task.count({
-      where: {
-        id,
-      },
-    });
-    if (!task) {
-      throw new NotFoundException(`User ${id} not found`);
     }
 
     return task;

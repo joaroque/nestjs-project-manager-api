@@ -45,7 +45,7 @@ export class ProjectService {
     data: Prisma.ProjectUpdateInput,
     userId: number,
   ): Promise<Project> {
-    const project = await this.exists(id, userId);
+    await this.exists(id, userId);
 
     return this.prisma.project.update({
       where: {
